@@ -103,42 +103,6 @@
             android:padding="12dp"
             android:textSize="12sp" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/lat_request" />
-
-        <EditText
-            android:id="@+id/lat_input_create"
-            android:layout_width="365dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="20dp"
-            android:background="@drawable/custom_log_in_input"
-            android:ems="10"
-            android:hint="Latitude"
-            android:inputType="numberDecimal"
-            android:padding="12dp"
-            android:textSize="12sp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/lng_request" />
-
-        <EditText
-            android:id="@+id/lng_input_create"
-            android:layout_width="365dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="20dp"
-            android:background="@drawable/custom_log_in_input"
-            android:ems="10"
-            android:hint="Longitude"
-            android:inputType="numberDecimal"
-            android:padding="12dp"
-            android:textSize="12sp" />
-
         <Button
             android:id="@+id/create_btn"
             android:layout_width="291dp"

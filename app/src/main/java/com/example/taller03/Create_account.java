@@ -27,7 +27,7 @@ public class Create_account extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getName();
     public static final Pattern VALID_EMAIL_ADDRESS_REGEX = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
-    private EditText nameEdit, lastnameEdit, emailEdit, passEdit, numIDEdit, latEdit, lngEdit;
+    private EditText nameEdit, lastnameEdit, emailEdit, passEdit, numIDEdit;
     private FirebaseAuth mAuth;
     private FirebaseDatabase database;
     private DatabaseReference myRef;
@@ -43,8 +43,6 @@ public class Create_account extends AppCompatActivity {
         emailEdit = findViewById(R.id.email_input_create);
         passEdit = findViewById(R.id.pass_input_create);
         numIDEdit = findViewById(R.id.IDnum_input_create);
-        latEdit = findViewById(R.id.lat_input_create);
-        lngEdit = findViewById(R.id.lng_input_create);
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
@@ -68,7 +66,10 @@ public class Create_account extends AppCompatActivity {
             startActivity(intent);
         } else {
             emailEdit.setText("");
+            lastnameEdit.setText("");
+            emailEdit.setText("");
             passEdit.setText("");
+            numIDEdit.setText("");
         }
     }
     private void createAccount(String email, String password) {
@@ -84,15 +85,10 @@ public class Create_account extends AppCompatActivity {
 
                             if(user!=null){
                                 User p = new User();
-                                p.setAddres("");
-                                p.setBirth(dateEdit.getText().toString());
-                                if(driveCheck.isChecked())
-                                    p.setDriver(true);
-                                else
-                                    p.setDriver(false);
-                                p.setEmail(emailEdit.getText().toString());
                                 p.setName(nameEdit.getText().toString());
-                                p.setPlate("");
+                                p.setLastname(lastnameEdit.getText().toString());
+                                p.setNumID(numIDEdit.getText().toString());
+                                p.setAvailable(true);
 
                                 myRef=database.getReference(DatabasePaths.USER + user.getUid());
                                 myRef.setValue(p);
