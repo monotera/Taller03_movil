@@ -2,6 +2,7 @@ package com.example.taller03;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -14,8 +15,12 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.example.taller03.model.DatabasePaths;
+import com.example.taller03.model.User;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -38,6 +43,13 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.taller03.databinding.ActivityMapsBinding;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,7 +60,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String LOCATIONS_FILE = "locations.json";
     private GoogleMap mMap;
@@ -57,6 +69,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     ArrayList<LocationJSON> json_locationJSONS = new ArrayList<>();
     private Logger logger = Logger.getLogger("TAG");
     boolean first_location = true;
+
+    private FirebaseAuth mAuth;
+    private FirebaseDatabase database;
+    private DatabaseReference myRef;
 
     //Variables de permisos
     private final int LOCATION_PERMISSION_ID = 103;
@@ -76,6 +92,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         binding = ActivityMapsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        mAuth = FirebaseAuth.getInstance();
+
+        // Initialize Firebase database
+        database = FirebaseDatabase.getInstance();
+        myRef = database.getReference();
+
         try {
             JSONObject jsonFile = loadLocationsByJSON();
             json_locations_file = jsonFile.getJSONArray("locations");
@@ -281,6 +304,133 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
 
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        FirebaseUser user = mAuth.getCurrentUser();
+        myRef = database.getReference(DatabasePaths.USER);
+
+        int itemClicked = item.getItemId();
+        if(itemClicked == R.id.menuLogOut){
+            mAuth.signOut();
+            disconect(user, item);
+            Intent intent = new Intent(MapsActivity.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+        }
+        if(itemClicked == R.id.available){
+            isAvailable(user, item);
+        }
+        if(itemClicked == R.id.availableList){
+            Intent intent = new Intent(MapsActivity.this, Available_activity.class);
+            startActivity(intent);
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void disconect(FirebaseUser user, MenuItem item){
+        myRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                User newUser = snapshot.getValue(User.class);
+
+                if(user.getUid().equals(snapshot.getKey())){
+                    User p = new User();
+                    p.setName(newUser.getName());
+                    p.setLastname(newUser.getLastname());
+                    p.setNumID(newUser.getNumID());
+                    p.setAvailable(false);
+                    myRef=database.getReference(DatabasePaths.USER + user.getUid());
+                    myRef.setValue(p);
+                }
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+
+    public void isAvailable(FirebaseUser user, MenuItem item){
+        myRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                User newUser = snapshot.getValue(User.class);
+
+                if(user.getUid().equals(snapshot.getKey())){
+                    User p = new User();
+                    p.setName(newUser.getName());
+                    p.setLastname(newUser.getLastname());
+                    p.setNumID(newUser.getNumID());
+
+                    if(newUser.isAvailable()){
+                        p.setAvailable(false);
+                        item.setTitle("Connect");
+                    } else {
+                        p.setAvailable(true);
+                        item.setTitle("Disconnect");
+                    }
+                    myRef=database.getReference(DatabasePaths.USER + user.getUid());
+                    myRef.setValue(p);
+                    if(p.isAvailable()){
+                        Toast.makeText(MapsActivity.this, "Change to: "+"connected",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                    if(p.isAvailable()){
+                        Toast.makeText(MapsActivity.this, "Change to: "+"disconnected",
+                                Toast.LENGTH_SHORT).show();
+                    }
+
+                }
+
+
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 
 }
