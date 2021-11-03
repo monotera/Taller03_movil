@@ -9,10 +9,14 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -142,6 +146,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        new GetMethodEx1().execute();
     }
     @Override
     protected void onResume() {
@@ -431,6 +436,67 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
         });
+    }
+
+
+    class GetMethodEx1 extends AsyncTask<Long, Void, Void> {
+
+        private Context mContext;
+        private int NOTIFICATION_ID = 1;
+        private Notification mNotification;
+        private NotificationManager mNotificationManager;
+
+        @Override
+        protected Void doInBackground(Long... params){
+            FirebaseUser user = mAuth.getCurrentUser();
+            myRef.addChildEventListener(new ChildEventListener() {
+                @Override
+                public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+                }
+
+                @Override
+                public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                    User newUser = snapshot.getValue(User.class);
+                    if(newUser.isAvailable() && !user.getUid().equals(snapshot.getKey())){
+
+                        Log.d("AAAAAAAAAAAAAAAAAAA", "onChildChanged: "+"AAAAAAAAAAAAAAAAAAAAAAAAAAA");
+
+                        createNotification( "Taller03", newUser.getName()+" is connected",MapsActivity.this);
+                    }
+                }
+
+                @Override
+                public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+            return null;
+        }
+
+        private void createNotification(String contentTitle, String contentText,Context context) {
+
+            mNotificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+            //Build the notification using Notification.Builder
+            Notification.Builder builder = new Notification.Builder(mContext)
+                    .setSmallIcon(android.R.drawable.stat_sys_download)
+                    .setAutoCancel(true)
+                    .setContentTitle(contentTitle)
+                    .setContentText(contentText);
+
+            //Show the notification
+            mNotificationManager.notify(NOTIFICATION_ID, builder.build());
+        }
     }
 
 }
