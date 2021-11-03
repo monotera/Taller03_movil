@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import com.example.taller03.model.DatabasePaths;
 import com.example.taller03.model.User;
+import com.example.taller03.services.BasicJobIntentService;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -65,7 +66,7 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
-
+    public static final String TAG = MainActivity.class.getName();
     private static final String LOCATIONS_FILE = "locations.json";
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
@@ -146,7 +147,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        new GetMethodEx1().execute();
     }
     @Override
     protected void onResume() {
@@ -160,6 +160,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onPause();
         stopLocationUpdates();
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //Service launch from i.e. onCreate
+//        Intent intent = new Intent(MainActivity.this, BasicIntentService.class);
+//        startService(intent);
+        Intent intent = new Intent(MapsActivity.this, BasicJobIntentService.class);
+        intent.putExtra("milliSeconds", 5000);
+        BasicJobIntentService.enqueueWork(MapsActivity.this, intent);
+        Log.i(TAG, "After the call to the service");
+    }
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -436,67 +449,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
         });
-    }
-
-
-    class GetMethodEx1 extends AsyncTask<Long, Void, Void> {
-
-        private Context mContext;
-        private int NOTIFICATION_ID = 1;
-        private Notification mNotification;
-        private NotificationManager mNotificationManager;
-
-        @Override
-        protected Void doInBackground(Long... params){
-            FirebaseUser user = mAuth.getCurrentUser();
-            myRef.addChildEventListener(new ChildEventListener() {
-                @Override
-                public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-                }
-
-                @Override
-                public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                    User newUser = snapshot.getValue(User.class);
-                    if(newUser.isAvailable() && !user.getUid().equals(snapshot.getKey())){
-
-                        Log.d("AAAAAAAAAAAAAAAAAAA", "onChildChanged: "+"AAAAAAAAAAAAAAAAAAAAAAAAAAA");
-
-                        createNotification( "Taller03", newUser.getName()+" is connected",MapsActivity.this);
-                    }
-                }
-
-                @Override
-                public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-
-                }
-
-                @Override
-                public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-
-                }
-            });
-            return null;
-        }
-
-        private void createNotification(String contentTitle, String contentText,Context context) {
-
-            mNotificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-            //Build the notification using Notification.Builder
-            Notification.Builder builder = new Notification.Builder(mContext)
-                    .setSmallIcon(android.R.drawable.stat_sys_download)
-                    .setAutoCancel(true)
-                    .setContentTitle(contentTitle)
-                    .setContentText(contentText);
-
-            //Show the notification
-            mNotificationManager.notify(NOTIFICATION_ID, builder.build());
-        }
     }
 
 }
