@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateUI(FirebaseUser currentUser){
         if(currentUser!=null){
-            Intent intent = new Intent(getBaseContext(), HomeActivity.class);
+            Intent intent = new Intent(getBaseContext(), MapsActivity.class);
             startActivity(intent);
         } else {
             emailEdit.setText("");
@@ -138,5 +138,10 @@ public class MainActivity extends AppCompatActivity {
     public void onCreateClick(View view) {
         Intent MainIntent = new Intent(this, Create_account.class);
         startActivity(MainIntent);
+    }
+
+    public void onClick(View view){
+        Intent intent = new Intent(this,MapsActivity.class);
+        startActivity(intent);
     }
 }
