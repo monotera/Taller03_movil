@@ -522,9 +522,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                Double distance = distance(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude(),list_user_location.latitude,list_user_location.longitude);
-                Toast.makeText(MapsActivity.this,"La distancia es de : " + distance.toString() + " km",Toast.LENGTH_SHORT).show();
+                User newUser = snapshot.getValue(User.class);
+                if(list_user_id.equals(snapshot.getKey())){
+                    Log.i("asd","Ebtro");
+                    list_user_location = new LatLng(newUser.getLat(),newUser.getLng());
+                    Double distance = distance(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude(),list_user_location.latitude,list_user_location.longitude);
+                    Toast.makeText(MapsActivity.this,"La distancia es de : " + distance.toString() + " km",Toast.LENGTH_SHORT).show();
+                    Marker validation = hasMarkers.get("list_user");
+                    if(validation != null) {
+                        validation.remove();
+                        hasMarkers.remove("list_user");
+                    }
+
+                    Marker marker = mMap.addMarker(new MarkerOptions().position(list_user_location).title(newUser.getName()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
+                    hasMarkers.put("list_user",marker);
+                }
             }
+
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot snapshot) {
