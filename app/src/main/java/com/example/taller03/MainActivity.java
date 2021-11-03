@@ -8,10 +8,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.taller03.model.DatabasePaths;
+import com.example.taller03.model.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -33,6 +36,9 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     EditText emailEdit, passEdit;
 
+    private FirebaseDatabase database;
+    private DatabaseReference myRef;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,6 +49,12 @@ public class MainActivity extends AppCompatActivity {
 
         this.getSupportActionBar().hide();
         mAuth = FirebaseAuth.getInstance();
+
+        // Initialize Firebase Auth
+        mAuth = FirebaseAuth.getInstance();
+        // Initialize Firebase database
+        database = FirebaseDatabase.getInstance();
+        myRef = database.getReference();
     }
 
     @Override
@@ -56,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
     private void updateUI(FirebaseUser currentUser){
         if(currentUser!=null){
             Intent intent = new Intent(getBaseContext(), HomeActivity.class);
-            intent.putExtra("user", currentUser.getEmail());
             startActivity(intent);
         } else {
             emailEdit.setText("");

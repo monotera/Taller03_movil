@@ -13,4 +13,5 @@
     <string name="lat_request">Please enter the latitude</string>
     <string name="lng_request">Please enter the longitude</string>
     <string name="sign_up_btn">SIGN UP</string>
+    <string name="location">Location</string>
 </resources>

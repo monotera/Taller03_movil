@@ -10,6 +10,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Taller03">
         <activity
+            android:name=".Available_activity"
+            android:exported="false" />
+        <activity
             android:name=".HomeActivity"
             android:exported="false" />
         <activity
