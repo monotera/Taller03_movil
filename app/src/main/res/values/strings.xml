@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">Taller03</string>
+    <string name="email">Email</string>
+    <string name="login">Login</string>
+    <string name="insert_your_email">Insert your email</string>
+    <string name="password">Password</string>
+    <string name="create_account">Create account</string>
+    <string name="name_request">Please enter your name</string>
+    <string name="email_request">Please enter your email</string>
+    <string name="pass_request">Please enter your password</string>
+    <string name="lastname_request">Please enter your lastname</string>
+    <string name="numID_request">Please enter your ID number</string>
+    <string name="lat_request">Please enter the latitude</string>
+    <string name="lng_request">Please enter the longitude</string>
+    <string name="sign_up_btn">SIGN UP</string>
+    <string name="location">Location</string>
 </resources>
