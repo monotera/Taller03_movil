@@ -76,6 +76,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Logger logger = Logger.getLogger("TAG");
     boolean first_location = true;
     LatLng list_user_location;
+    public final static double RADIUS_OF_EARTH_KM = 6371;
     String list_user_id;
     HashMap<String,Marker> hasMarkers = new HashMap<>();
 
@@ -93,6 +94,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
     Location mCurrentLocation;
+    boolean print_intial_distance =  true;
 
 
     @Override
@@ -154,6 +156,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         };
 
         turnOnLocationAndStartUpdates();
+        if(extras != null){
+          //  Double distance = distance(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude(),list_user_location.latitude,list_user_location.longitude);
+            //Toast.makeText(MapsActivity.this,"La distancia es de :" + distance.toString(),Toast.LENGTH_SHORT).show();
+        }
+
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -163,8 +170,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onResume() {
         super.onResume();
+        print_intial_distance = true;
         first_location = true;
         startLocationUpdates();
+
     }
 
     @Override
@@ -492,7 +501,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
                 User newUser = snapshot.getValue(User.class);
                 if(list_user_id.equals(snapshot.getKey())){
+                    Log.i("asd","Ebtro");
                     list_user_location = new LatLng(newUser.getLat(),newUser.getLng());
+                    if(print_intial_distance){
+                        Double distance = distance(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude(),list_user_location.latitude,list_user_location.longitude);
+                        Toast.makeText(MapsActivity.this,"La distancia es de : " + distance.toString() + " km",Toast.LENGTH_SHORT).show();
+                        print_intial_distance = false;
+                    }
+
                     Marker validation = hasMarkers.get("list_user");
                     if(validation != null) {
                         validation.remove();
@@ -506,7 +522,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
+                Double distance = distance(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude(),list_user_location.latitude,list_user_location.longitude);
+                Toast.makeText(MapsActivity.this,"La distancia es de : " + distance.toString() + " km",Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -564,6 +581,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
         });
+    }
+
+
+    public double distance(double lat1, double long1, double lat2, double long2) {
+        double latDistance = Math.toRadians(lat1 - lat2);
+        double lngDistance = Math.toRadians(long1 - long2);
+        double a = Math.sin(latDistance / 2) *
+                Math.sin(latDistance / 2) +
+                Math.cos(Math.toRadians(lat1)) *
+                        Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(lngDistance / 2) *
+                        Math.sin(lngDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double result = RADIUS_OF_EARTH_KM * c;
+        return Math.round(result * 100.0) / 100.0;
     }
 
 }
