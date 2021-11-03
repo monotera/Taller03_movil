@@ -86,8 +86,7 @@ public class BasicJobIntentService extends JobIntentService {
                         //Lanzar la notificacion
                         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getBaseContext());
                         // notificationId es un entero unico definido para cada notificacion que se lanza
-                        notificationManager.notify(notificationId, mBuilder.build());
-                        notificationId = notificationId + 1;
+                        notificationManager.notify(Integer.parseInt(newUser.getNumID()), mBuilder.build());
                     }
                 }
             }
