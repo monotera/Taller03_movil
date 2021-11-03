@@ -481,7 +481,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         hasMarkers.remove("list_user");
                     }
 
-                    Marker marker = mMap.addMarker(new MarkerOptions().position(list_user_location).title("My location").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
+                    Marker marker = mMap.addMarker(new MarkerOptions().position(list_user_location).title(newUser.getName()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
                     hasMarkers.put("list_user",marker);
                 }
             }
