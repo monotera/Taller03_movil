@@ -65,7 +65,6 @@ public class BasicJobIntentService extends JobIntentService {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
-
                     User newUser = singleSnapshot.getValue(User.class);
 
                     if(newUser.isAvailable() && !currentUser.getUid().equals(singleSnapshot.getKey())){
@@ -74,12 +73,11 @@ public class BasicJobIntentService extends JobIntentService {
                         mBuilder.setSmallIcon(R.drawable.g1);
                         mBuilder.setContentTitle("Se conecto un usuario");
                         mBuilder.setContentText("El usuario "+newUser.getName()+" "+newUser.getLastname()+" esta conectado");
-
                         //Acción asociada a la notificación
-                        //CAMBIAAAAAR
                         Intent intent = new Intent(getBaseContext(), MapsActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 0, intent, 0);
+                        String id = singleSnapshot.getKey();
+                        intent.putExtra("key", id);
+                        PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), Integer.parseInt(newUser.getNumID()), intent, 0);
                         mBuilder.setContentIntent(pendingIntent);
                         mBuilder.setAutoCancel(true); //Remueve la notificación cuando se toca
 
