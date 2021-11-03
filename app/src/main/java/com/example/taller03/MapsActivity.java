@@ -5,7 +5,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.app.Activity;
@@ -39,6 +38,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.taller03.databinding.ActivityMapsBinding;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -58,6 +58,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.logging.Logger;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -69,6 +70,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     ArrayList<LocationJSON> json_locationJSONS = new ArrayList<>();
     private Logger logger = Logger.getLogger("TAG");
     boolean first_location = true;
+    LatLng list_user_location;
+    String list_user_id;
+    HashMap<String,Marker> hasMarkers = new HashMap<>();
 
     private FirebaseAuth mAuth;
     private FirebaseDatabase database;
@@ -99,6 +103,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         database = FirebaseDatabase.getInstance();
         myRef = database.getReference();
 
+        Bundle extras = getIntent().getExtras();
+        if(extras != null){
+            list_user_id = extras.getString("key");
+            Log.d("aaaaaa",list_user_id);
+        }
+
         try {
             JSONObject jsonFile = loadLocationsByJSON();
             json_locations_file = jsonFile.getJSONArray("locations");
@@ -127,7 +137,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log.i("LOCATION", "LOCATION CALLBACK" + location);
                 if (location != null) {
                     mCurrentLocation = location;
-                    paintMyLocation();
+                    update_my_location();
+                    if(list_user_id!=null)
+                        get_location_FB();
                     first_location = false;
                     /*logger.info(String.valueOf(location.getLatitude()));
                     logger.info(String.valueOf(location.getLongitude()));
@@ -173,13 +185,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.getUiSettings().setAllGesturesEnabled(true);
         //zoom buttons
         mMap.getUiSettings().setZoomControlsEnabled(true);
+        paintJson();
+
+    }
+    public void paintJson(){
+
         for (LocationJSON loc: json_locationJSONS) {
             LatLng json_loc = new LatLng(loc.getLatitude(),loc.getLongitude());
             mMap.addMarker(new MarkerOptions().position(json_loc).title(loc.getName()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
         }
-
     }
-
     public String loadJSONFromAsset(String assetName) {
         String json = null;
         try {
@@ -203,15 +218,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     //Location section
 
-    public void paintMyLocation() {
+    public void update_my_location() {
+        FirebaseUser user = mAuth.getCurrentUser();
+        myRef = database.getReference(DatabasePaths.USER);
+        update_my_location_FB(user);
+        Marker home = hasMarkers.get("Home");
+        if(home != null) {
+            home.remove();
+            hasMarkers.remove("Home");
+        }
         LatLng my_location = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-        mMap.addMarker(new MarkerOptions().position(my_location).title("My location").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
+        Marker marker = mMap.addMarker(new MarkerOptions().position(my_location).title("My location").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
+        hasMarkers.put("Home",marker);
         if(first_location){
             mMap.moveCamera(CameraUpdateFactory.newLatLng(my_location));
             mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
         }
-
+        paintJson();
     }
+
+
 
     private void startLocationUpdates() {
         if (ContextCompat.checkSelfPermission(this,
@@ -348,6 +374,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     p.setLastname(newUser.getLastname());
                     p.setNumID(newUser.getNumID());
                     p.setAvailable(false);
+                    p.setLng(newUser.getLng());
+                    p.setLat(newUser.getLat());
                     myRef=database.getReference(DatabasePaths.USER + user.getUid());
                     myRef.setValue(p);
                 }
@@ -387,6 +415,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     p.setName(newUser.getName());
                     p.setLastname(newUser.getLastname());
                     p.setNumID(newUser.getNumID());
+                    p.setLng(newUser.getLng());
+                    p.setLat(newUser.getLat());
 
                     if(newUser.isAvailable()){
                         p.setAvailable(false);
@@ -409,6 +439,91 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
 
 
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    //Firebase
+
+    public void get_location_FB(){
+        FirebaseUser user = mAuth.getCurrentUser();
+        myRef = database.getReference(DatabasePaths.USER);
+
+        myRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                User newUser = snapshot.getValue(User.class);
+                if(list_user_id.equals(snapshot.getKey())){
+                    list_user_location = new LatLng(newUser.getLat(),newUser.getLng());
+                    Marker validation = hasMarkers.get("list_user");
+                    if(validation != null) {
+                        validation.remove();
+                        hasMarkers.remove("list_user");
+                    }
+
+                    Marker marker = mMap.addMarker(new MarkerOptions().position(list_user_location).title("My location").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
+                    hasMarkers.put("list_user",marker);
+                }
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+    public void update_my_location_FB(FirebaseUser user){
+        myRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                User newUser = snapshot.getValue(User.class);
+
+                if(user.getUid().equals(snapshot.getKey())){
+                    User p = new User();
+                    p.setName(newUser.getName());
+                    p.setLastname(newUser.getLastname());
+                    p.setNumID(newUser.getNumID());
+                    p.setAvailable(newUser.isAvailable());
+                    p.setLat((float) mCurrentLocation.getLatitude());
+                    p.setLng((float) mCurrentLocation.getLongitude());
+                    myRef=database.getReference(DatabasePaths.USER + user.getUid());
+                    myRef.setValue(p);
+                }
             }
 
             @Override

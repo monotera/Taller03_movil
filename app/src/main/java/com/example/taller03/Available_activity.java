@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TableLayout;
 import android.widget.Toast;
@@ -23,6 +24,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.maps.model.LatLng;
 
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -34,6 +36,7 @@ public class Available_activity extends AppCompatActivity {
     private DatabaseReference myRef;
     private ArrayList<UserItem> userList;
     private RecyclerView recycleList;
+    private Button mapBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +53,13 @@ public class Available_activity extends AppCompatActivity {
         recycleList.setLayoutManager(new LinearLayoutManager(this));
         fill();
 
+        mapBtn = findViewById(R.id.button_user_location);
+
+
+
+
     }
+
 
     public void fill(){
         FirebaseUser user = mAuth.getCurrentUser();
@@ -61,7 +70,7 @@ public class Available_activity extends AppCompatActivity {
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
                 User newUser = snapshot.getValue(User.class);
                 if(newUser.isAvailable()){
-                    userList.add(new UserItem(newUser.getName(), R.drawable.g1));
+                    userList.add(new UserItem(newUser.getName(), R.drawable.g1,snapshot.getKey()));
                     UserListAdapter userAdapter = new UserListAdapter(userList);
                     recycleList.setAdapter(userAdapter);
                 }
