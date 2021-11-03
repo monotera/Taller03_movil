@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.maps.model.LatLng;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -35,7 +36,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
     @Override
     public void onBindViewHolder(@NonNull ViewHolderDatos holder, int position) {
         holder.name.setText(items.get(position).getName());
-        holder.avatar.setImageResource(items.get(position).getImage());
+        Picasso.get().load(items.get(position).getImage()).into(holder.avatar);
         holder.id = items.get(position).getId();
     }
 

@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -70,10 +71,6 @@ public class Create_account extends AppCompatActivity {
         passEdit = findViewById(R.id.pass_input_create);
         numIDEdit = findViewById(R.id.IDnum_input_create);
 
-
-        FirebaseStorage storage = FirebaseStorage.getInstance();
-        storageRef = storage.getReference();
-
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
         // Initialize Firebase database
@@ -125,23 +122,26 @@ public class Create_account extends AppCompatActivity {
                     imageUri = data.getData();
                     imageView.setImageURI(imageUri);
                     logger.info("Image loaded successfully.");
+                    //uploadImageToFirebase("aaaa");
             }
 
         }
     }
 
     private void uploadImageToFirebase(String file_name) {
+        storage = FirebaseStorage.getInstance();
+        storageRef = storage.getReference();
         StorageReference fileRef = storageRef.child(file_name+".jpg");
-
         fileRef.putFile(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Toast.makeText(Create_account.this,"Image uploaded",Toast.LENGTH_SHORT).show();
+                Log.i("Succes firebase storage",file_name);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Toast.makeText(Create_account.this,"Fail to upload image",Toast.LENGTH_SHORT).show();
+                logger.info(e.toString());
+
             }
         });
     }
@@ -156,8 +156,9 @@ public class Create_account extends AppCompatActivity {
 
     private void updateUI(FirebaseUser currentUser){
         if(currentUser!=null){
+            uploadImageToFirebase(currentUser.getUid());
             Intent intent = new Intent(getBaseContext(), MapsActivity.class);
-            intent.putExtra("user", currentUser.getEmail());
+            //intent.putExtra("user", currentUser.getEmail());
             startActivity(intent);
         } else {
             emailEdit.setText("");
@@ -179,6 +180,8 @@ public class Create_account extends AppCompatActivity {
                             FirebaseUser user = mAuth.getCurrentUser();
 
                             if(user!=null){
+                               // uploadImageToFirebase(user.getUid());
+
                                 User p = new User();
                                 p.setName(nameEdit.getText().toString());
                                 p.setLastname(lastnameEdit.getText().toString());
@@ -187,8 +190,9 @@ public class Create_account extends AppCompatActivity {
 
                                 myRef=database.getReference(DatabasePaths.USER + user.getUid());
                                 myRef.setValue(p);
-                                uploadImageToFirebase(user.getUid());
                                 updateUI(user);
+
+
                             }
                         } else {
                             // If sign in fails, display a message to the user.
@@ -217,6 +221,10 @@ public class Create_account extends AppCompatActivity {
             Toast.makeText(Create_account.this, "Email is not a valid format",
                     Toast.LENGTH_SHORT).show();
             return;
+        }
+        if (imageUri == null){
+            Toast.makeText(Create_account.this, "You need to select an image",
+                    Toast.LENGTH_SHORT).show();
         }
         createAccount(email, pass);
     }
