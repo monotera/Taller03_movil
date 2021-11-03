@@ -8,10 +8,14 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -20,6 +24,7 @@ import android.widget.Toast;
 
 import com.example.taller03.model.DatabasePaths;
 import com.example.taller03.model.User;
+import com.example.taller03.services.BasicJobIntentService;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -62,7 +67,7 @@ import java.util.HashMap;
 import java.util.logging.Logger;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
-
+    public static final String TAG = MainActivity.class.getName();
     private static final String LOCATIONS_FILE = "locations.json";
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
@@ -167,6 +172,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onPause();
         stopLocationUpdates();
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //Service launch from i.e. onCreate
+//        Intent intent = new Intent(MainActivity.this, BasicIntentService.class);
+//        startService(intent);
+        Intent intent = new Intent(MapsActivity.this, BasicJobIntentService.class);
+        intent.putExtra("milliSeconds", 5000);
+        BasicJobIntentService.enqueueWork(MapsActivity.this, intent);
+        Log.i(TAG, "After the call to the service");
+    }
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
